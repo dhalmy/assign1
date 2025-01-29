@@ -209,3 +209,73 @@ extern RC ensureCapacity(int numberOfPages, SM_FileHandle *fHandle) {
     return RC_OK;
 }
 
+
+
+/************************************************************
+ *                    Clarence READ BLOCK PART                             *
+ ************************************************************/
+
+// Read a block from the file
+RC readBlock(int pageNum, SM_FileHandle *fHandle, SM_PageHandle memPage) {
+    if (fHandle->mgmtInfo == NULL) {
+        return RC_FILE_HANDLE_NOT_INIT;
+    }
+
+    FILE *file = (FILE *) fHandle->mgmtInfo;
+
+    if (pageNum >= fHandle->totalNumPages || pageNum < 0) {
+        return RC_READ_NON_EXISTING_PAGE;
+    }
+
+    fseek(file, pageNum * PAGE_SIZE, SEEK_SET);
+    fread(memPage, sizeof(char), PAGE_SIZE, file);
+    fHandle->curPagePos = pageNum;
+
+    return RC_OK;
+}
+
+
+// Read the first block
+RC readFirstBlock(SM_FileHandle *fHandle, SM_PageHandle memPage) {
+    return readBlock(0, fHandle, memPage);
+}
+
+// Read the last block
+RC readLastBlock(SM_FileHandle *fHandle, SM_PageHandle memPage) {
+    return readBlock(fHandle->totalNumPages - 1, fHandle, memPage);
+}
+
+// Read the previous block
+RC readPreviousBlock(SM_FileHandle *fHandle, SM_PageHandle memPage) {
+    if (fHandle->curPagePos <= 0) {
+        return RC_READ_NON_EXISTING_PAGE;
+    }
+    return readBlock(fHandle->curPagePos - 1, fHandle, memPage);
+}
+
+// Read the current block
+RC readCurrentBlock(SM_FileHandle *fHandle, SM_PageHandle memPage) {
+    return readBlock(fHandle->curPagePos, fHandle, memPage);
+}
+
+// Read the next block
+RC readNextBlock(SM_FileHandle *fHandle, SM_PageHandle memPage) {
+    if (fHandle->curPagePos >= fHandle->totalNumPages - 1) {
+        return RC_READ_NON_EXISTING_PAGE;
+    }
+    return readBlock(fHandle->curPagePos + 1, fHandle, memPage);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
