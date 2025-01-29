@@ -1,3 +1,50 @@
+### Part 1: Manipulating Page Files
+
+This section details the implementation and usage of fundamental functions for managing page files in the storage system. These functions provide the basic operations needed to create, open, close, and destroy page files.
+
+#### 1.1 `initStorageManager(void)`
+- **Purpose**: Initializes the storage manager. Currently serves as a placeholder for any future initialization needs.
+- **Usage**: Called once at the start of the program to set up the storage manager.
+
+#### 1.2 `createPageFile(char *fileName)`
+- **Purpose**: Creates a new page file with an initial size of one page (4096 bytes).
+- **Usage**:
+  - Validates the filename to ensure it's not NULL
+  - Creates a new binary file in write mode ("wb")
+  - Allocates memory for one page filled with '\0' bytes using `calloc()`
+  - Writes the empty page to the file using `fwrite()`
+  - Properly frees allocated memory and closes the file
+  - Returns appropriate error codes if any operation fails
+
+#### 1.3 `openPageFile(char *fileName, SM_FileHandle *fHandle)`
+- **Purpose**: Opens an existing page file and initializes the file handle structure.
+- **Usage**:
+  - Validates input parameters (fileName and fHandle)
+  - Opens the file in binary read/write mode ("rb+")
+  - Calculates total number of pages based on file size
+  - Initializes file handle fields:
+    - fileName: name of the opened file
+    - totalNumPages: total number of pages in file
+    - curPagePos: set to 0 (first page)
+    - mgmtInfo: stores FILE pointer for future operations
+
+#### 1.4 `closePageFile(SM_FileHandle *fHandle)`
+- **Purpose**: Closes an open page file and cleans up the file handle.
+- **Usage**:
+  - Verifies the file handle is valid
+  - Retrieves FILE pointer from mgmtInfo
+  - Closes the file using `fclose()`
+  - Clears the management info pointer
+
+#### 1.5 `destroyPageFile(char *fileName)`
+- **Purpose**: Removes a page file from the file system.
+- **Usage**:
+  - Validates the filename
+  - Uses `remove()` function to delete the file
+  - Returns appropriate status code based on operation success
+
+These functions form the foundation of the storage manager, providing essential file operations that other components build upon. Proper error handling and resource management are implemented throughout to ensure reliable operation of the storage system.
+
 ### Part 3: Writing Blocks to a Page File
 
 This section details the implementation and usage of functions designed to write data blocks to a page file. These functions facilitate the manipulation of page content, ensuring data persistence in the storage management system.

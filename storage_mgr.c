@@ -5,9 +5,19 @@
 #include "storage_mgr.h"
 #include "dberror.h"
 
+/********************************************************
+ * Part 1: Storage Manager File Operations
+ * Implemented by: David Halmy
+ * 
+ * This section handles the basic file operations including:
+ * - Storage manager initialization
+ * - File creation and deletion
+ * - File opening and closing
+ ********************************************************/
+
 void initStorageManager(void) {
-    // Initialize the storage manager
-}
+    // Currently a placeholder 
+    }
 
 RC createPageFile(char *fileName) {
     // Check if filename is valid
@@ -15,12 +25,14 @@ RC createPageFile(char *fileName) {
         return RC_FILE_NOT_FOUND;
     }
     
+    // Open file in binary write mode
     FILE *file = fopen(fileName, "wb");
     if (file == NULL) {
         return RC_WRITE_FAILED;
     }
     
     // Allocate memory for one page filled with zeros
+    // PAGE_SIZE is defined as 4096 bytes
     char *emptyPage = (char *) calloc(PAGE_SIZE, sizeof(char));
     if (emptyPage == NULL) {
         fclose(file);
@@ -28,53 +40,59 @@ RC createPageFile(char *fileName) {
     }
     
     // Write the empty page to file
+    // fwrite returns number of items written - should equal PAGE_SIZE
     if (fwrite(emptyPage, sizeof(char), PAGE_SIZE, file) != PAGE_SIZE) {
         free(emptyPage);
         fclose(file);
         return RC_WRITE_FAILED;
     }
     
-    // Clean up
+    // Clean up allocated memory and close file
     free(emptyPage);
     fclose(file);
     return RC_OK;
 }
 
 RC openPageFile(char *fileName, SM_FileHandle *fHandle) {
+    // Validate input parameters
     if (fileName == NULL || fHandle == NULL) {
         return RC_FILE_HANDLE_NOT_INIT;
     }
     
+    // Open file in binary read/write mode
     FILE *file = fopen(fileName, "rb+");
     if (file == NULL) {
         return RC_FILE_NOT_FOUND;
     }
     
-    // Get file size
+    // Calculate total number of pages
+    // Move to end of file to get size
     fseek(file, 0L, SEEK_END);
     long fileSize = ftell(file);
-    rewind(file);
+    rewind(file);  // Reset file position to start
     
-    // Initialize file handle
+    // Initialize file handle with file information
     fHandle->fileName = fileName;
     fHandle->totalNumPages = (int)(fileSize / PAGE_SIZE);
-    fHandle->curPagePos = 0;
-    fHandle->mgmtInfo = file;
+    fHandle->curPagePos = 0;  // Start at first page
+    fHandle->mgmtInfo = file;  // Store FILE pointer for future use
     
     return RC_OK;
 }
 
 RC closePageFile(SM_FileHandle *fHandle) {
+    // Verify file handle is valid
     if (fHandle == NULL) {
         return RC_FILE_HANDLE_NOT_INIT;
     }
     
+    // Get FILE pointer from management info
     FILE *file = (FILE *)fHandle->mgmtInfo;
     if (file == NULL) {
         return RC_FILE_HANDLE_NOT_INIT;
     }
     
-    // Close the file
+    // Close the file and clear the management info
     fclose(file);
     fHandle->mgmtInfo = NULL;
     
@@ -82,11 +100,12 @@ RC closePageFile(SM_FileHandle *fHandle) {
 }
 
 RC destroyPageFile(char *fileName) {
+    // Verify filename is valid
     if (fileName == NULL) {
         return RC_FILE_NOT_FOUND;
     }
     
-    // Remove the file
+    // Attempt to remove file from filesystem
     if (remove(fileName) != 0) {
         return RC_FILE_NOT_FOUND;
     }
